@@ -1,6 +1,6 @@
 {
     "name": "babyclara",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "A Vue.Js Work Station",
     "main": "index.js",
     "author": "Augment Chinedu",
@@ -9,6 +9,9 @@
     "bin": {
         "babyclara": "index.js"
     },
+    "files": [
+        "*"
+    ],
     "dependencies": {
         "gkrane": "^3.0.1"
     }
