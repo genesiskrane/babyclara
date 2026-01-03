@@ -50,7 +50,6 @@ async function saveRoutes(type, project) {
 
       const segments = relative.split("/").map(kebabCase);
       const name = segments[segments.length - 1];
-
       const routePath = "/" + segments.join("/");
 
       if (routePath === "/404") continue;
@@ -70,22 +69,13 @@ async function saveRoutes(type, project) {
   walk(pagesPath);
 
   if (!routes.length) return;
-
-  try {
-    await wsRequest("/routes/saveBatch", { routes });
-    console.log(`✓ Sent ${routes.length} routes for "${project}"`);
-  } catch (err) {
-    console.error("Route sync failed:", err.message);
-  }
+  await wsRequest("saveRoutes", { routes });
 }
 
 /* ======================================================
    FRONTEND ROUTER GENERATION
 ====================================================== */
 
-/**
- * Collect all Vue files
- */
 function getVueFiles(pagesPath) {
   const files = [];
 
@@ -94,11 +84,8 @@ function getVueFiles(pagesPath) {
       const fullPath = path.join(dir, file);
       const stat = fs.statSync(fullPath);
 
-      if (stat.isDirectory()) {
-        walk(fullPath);
-      } else if (file.endsWith(".vue")) {
-        files.push(fullPath);
-      }
+      if (stat.isDirectory()) walk(fullPath);
+      else if (file.endsWith(".vue")) files.push(fullPath);
     });
   }
 
@@ -106,9 +93,6 @@ function getVueFiles(pagesPath) {
   return files;
 }
 
-/**
- * Generate Vue Router routes
- */
 function generateRoutes(files, pagesPath) {
   return files.map((fullPath) => {
     const relative = path
@@ -118,9 +102,7 @@ function generateRoutes(files, pagesPath) {
 
     const segments = relative.split("/").map(kebabCase);
     const name = segments[segments.length - 1];
-
-    const routePath =
-      "/" + segments.join("/");
+    const routePath = "/" + segments.join("/");
 
     return {
       path: routePath === "/home" ? "/" : routePath,
@@ -130,49 +112,33 @@ function generateRoutes(files, pagesPath) {
   });
 }
 
-/**
- * Write src/router/index.js
- */
 function writeRouterFile(routes, routerPath) {
   const content = `import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
 ${routes
-      .map(
-        (r) => `  {
+  .map(
+    (r) => `  {
     path: '${r.path}',
     name: '${r.name}',
     component: ${r.component}
   }`
-      )
-      .join(",\n")}
+  )
+  .join(",\n")}
 ];
 
-const router = createRouter({
+export default createRouter({
   history: createWebHistory(),
   routes
 });
-
-export default router;
 `;
 
   fs.mkdirSync(path.dirname(routerPath), { recursive: true });
   fs.writeFileSync(routerPath, content, "utf8");
-
-  // console.log("✓ Vue router generated");
 }
 
-/* ======================================================
-   MAIN ENTRY
-====================================================== */
 function createRouter(type, project) {
-  const basePath = path.join(
-    process.cwd(),
-    `${type}s`,
-    project,
-    "src"
-  );
-
+  const basePath = path.join(process.cwd(), `${type}s`, project, "src");
   const pagesPath = path.join(basePath, "pages");
   const routerPath = path.join(basePath, "router", "index.js");
 
@@ -184,146 +150,96 @@ function createRouter(type, project) {
   writeRouterFile(routes, routerPath);
 }
 
+/* ======================================================
+   PINIA STORE GENERATOR (WITH STATE DETECTION)
+====================================================== */
 
-
-
-
-/**
- * Dynamic Pinia Store Generator
- * ---------------------------------
- * - Scans pages & components
- * - Detects store usage
- * - Fetches store logic from DB via WS
- * - Generates src/store/index.js
- * - Hot reloads clients
- */
-
-
-/* ----------------------------------
- * 1. Extract store usage
- * ---------------------------------- */
-
+/* -------- store action usage -------- */
 function extractStoreUsage(content) {
   const found = new Set();
 
-  // store.login()
   const direct = /\bstore\.([a-zA-Z_$][\w$]*)\s*\(/g;
-
-  // const { login, logout } = store
   const destructured = /\{\s*([^}]+)\s*\}\s*=\s*store/g;
 
   let match;
 
-  while ((match = direct.exec(content))) {
-    found.add(match[1]);
-  }
+  while ((match = direct.exec(content))) found.add(match[1]);
 
   while ((match = destructured.exec(content))) {
     match[1]
       .split(",")
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(fn => found.add(fn));
+      .map((s) => s.trim())
+      .forEach((fn) => found.add(fn));
   }
 
-  console.log(found)
   return [...found];
 }
 
-/* ----------------------------------
- * 2. Recursively scan directories
- * ---------------------------------- */
+/* -------- store state usage -------- */
+function extractStoreStateUsage(content) {
+  const found = new Set();
 
-function scanDir(dir, bucket = new Set()) {
-  if (!fs.existsSync(dir)) return bucket;
+  const direct = /\bstore\.([a-zA-Z_$][\w$]*)\b(?!\s*\()/g;
+  const destructured = /\{\s*([^}]+)\s*\}\s*=\s*store/g;
 
-  const entries = fs.readdirSync(dir);
+  let match;
 
-  for (const entry of entries) {
+  while ((match = direct.exec(content))) found.add(match[1]);
+
+  while ((match = destructured.exec(content))) {
+    match[1]
+      .split(",")
+      .map((s) => s.split(":")[0].trim())
+      .forEach((k) => found.add(k));
+  }
+
+  return [...found];
+}
+
+/* -------- scan dirs -------- */
+function scanDir(dir, result = { actions: new Set(), state: new Set() }) {
+  if (!fs.existsSync(dir)) return result;
+
+  for (const entry of fs.readdirSync(dir)) {
     const fullPath = path.join(dir, entry);
     const stat = fs.statSync(fullPath);
 
-    if (stat.isDirectory()) {
-      scanDir(fullPath, bucket);
-    } else if (/\.(vue|js)$/.test(entry)) {
+    if (stat.isDirectory()) scanDir(fullPath, result);
+    else if (/\.(vue|js)$/.test(entry)) {
       const content = fs.readFileSync(fullPath, "utf8");
-      extractStoreUsage(content).forEach(fn => bucket.add(fn));
+
+      extractStoreUsage(content).forEach((a) => result.actions.add(a));
+      extractStoreStateUsage(content).forEach((s) => result.state.add(s));
     }
   }
 
-  return bucket;
+  return result;
 }
 
-/* ----------------------------------
- * 3. Fetch store definitions from DB
- * ---------------------------------- */
-/**
- * Expected DB response:
- * [
- *   {
- *     name: "login",
- *     type: "action" | "getter",
- *     body: "async login(payload) { ... }",
- *     state: { user: null },
- *     imports: ["axios"]
- *   }
- * ]
- */
-
-async function fetchStoreDefinitions(functions) {
-  if (!functions.length) return [];
-
-  return wsRequest("getStoreDefinition", {
-    functions
-  });
+/* -------- fetch from DB -------- */
+async function fetchStoreDefinitions(actions, state) {
+  return wsRequest("getStoreDefinitions", { actions, state });
 }
 
-/* ----------------------------------
- * 4. Build imports
- * ---------------------------------- */
-
+/* -------- helpers -------- */
 function buildImports(defs) {
   const imports = new Set();
-
-  defs.forEach(d => {
-    (d.imports || []).forEach(i => imports.add(i));
-  });
-
-  return [...imports]
-    .map(i => `import ${i} from "${i}";`)
-    .join("\n");
+  defs.forEach((d) => (d.imports || []).forEach((i) => imports.add(i)));
+  return [...imports].map((i) => `import ${i} from "${i}";`).join("\n");
 }
-
-/* ----------------------------------
- * 5. Infer state
- * ---------------------------------- */
 
 function buildState(defs) {
   const state = {};
-
-  defs.forEach(d => {
-    if (d.state && typeof d.state === "object") {
-      Object.assign(state, d.state);
-    }
-  });
-
+  defs.forEach((d) => d.state && Object.assign(state, d.state));
   return JSON.stringify(state, null, 2);
 }
 
-/* ----------------------------------
- * 6. Split getters & actions
- * ---------------------------------- */
-
 function splitDefs(defs) {
   return {
-    actions: defs.filter(d => d.type === "action"),
-    getters: defs.filter(d => d.type === "getter")
+    actions: defs.filter((d) => d.type === "action"),
+    getters: defs.filter((d) => d.type === "getter"),
   };
 }
-
-/* ----------------------------------
- * 7. Generate Pinia store
- * ---------------------------------- */
 
 function generateStore(defs) {
   const imports = buildImports(defs);
@@ -338,81 +254,52 @@ export const useStore = defineStore("store", {
   state: () => (${state}),
 
   getters: {
-${getters.map(g => "    " + g.body).join(",\n")}
+${getters.map((g) => "    " + g.body).join(",\n")}
   },
 
   actions: {
-${actions.map(a => "    " + a.body).join(",\n")}
+${actions.map((a) => "    " + a.body).join(",\n")}
   }
 });
 `.trim();
 }
 
-/* ----------------------------------
- * 8. Hot reload notifier
- * ---------------------------------- */
-
-function notifyClients(project) {
-  wsRequest("hotReload", {
-    project,
-    target: "store"
-  });
-}
-
-/* ----------------------------------
- * 9. MAIN createStore FUNCTION
- * ---------------------------------- */
-
+/* -------- main store creator -------- */
 async function createStore(type, project) {
   const root = path.join(process.cwd(), `${type}s`, project, "src");
-
   const pagesDir = path.join(root, "pages");
   const componentsDir = path.join(root, "components");
   const storeDir = path.join(root, "store");
 
-  // 1. Scan usage
-  const used = new Set();
-  scanDir(pagesDir, used);
-  scanDir(componentsDir, used);
+  const usage = scanDir(pagesDir);
 
-  if (!used.size) {
-    console.log("ℹ No store usage found");
-    return;
-  }
+  scanDir(componentsDir, usage);
 
-  console.log("🔍 Store functions found:", [...used]);
+  const actions = [...usage.actions];
+  const state = [...usage.state];
 
-  // 2. Fetch definitions
-  const defs = await fetchStoreDefinitions([...used]);
+  if (!actions.length && !state.length) return;
 
-  if (!defs.length) {
-    console.log("⚠ No store definitions returned from DB");
-    return;
-  }
+  const { data } = await fetchStoreDefinitions(actions, state);
 
-  // 3. Generate store
-  const storeCode = generateStore(defs);
+  const defs = data;
+
+  if (!defs.length) return;
 
   fs.mkdirSync(storeDir, { recursive: true });
   fs.writeFileSync(
     path.join(storeDir, "index.js"),
-    storeCode,
+    generateStore(defs),
     "utf8"
   );
-
-  // 4. Hot reload
-  notifyClients(project);
-
-  console.log("✅ Pinia store generated successfully");
 }
 
-/* ----------------------------------
- * EXPORT
- * ---------------------------------- */
-
+/* ======================================================
+   EXPORTS
+====================================================== */
 
 module.exports = {
   saveRoutes,
   createRouter,
-  createStore
+  createStore,
 };
