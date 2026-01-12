@@ -1,7 +1,7 @@
 {
     "name": "babyclara",
-    "version": "0.0.9",
-    "description": "A Vue.Js Work Station",
+    "version": "0.1.0",
+    "description": "A frontend development workstation",
     "main": "index.js",
     "author": "Augment Chinedu",
     "license": "ISC",
