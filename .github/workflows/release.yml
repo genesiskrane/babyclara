@@ -9,22 +9,22 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Important for Semantic Release to see all tags
 
-      - uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Semantic Release
+      - name: Run Semantic Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          # For a normal release:
-          npx semantic-release
-
-          # OR for a prerelease:
-          # npx semantic-release --prerelease $(date +'%Y%m%d%H%M%S')
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by GitHub
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}       # if publishing to npm
+        run: npx semantic-release
