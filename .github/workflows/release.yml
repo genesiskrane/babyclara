@@ -3,42 +3,45 @@ name: Auto Release Per Commit
 on:
   push:
     branches:
-      - main
+      - main  # trigger on main branch
 
 permissions:
-  contents: write
-  packages: write
+  contents: write   # for GitHub releases
+  packages: write   # for npm publish
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # 1️⃣ Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # full history for semantic-release
 
+      # 2️⃣ Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Generate timestamped pre-release version
+      # 4️⃣ Generate timestamped pre-release version
       - name: Generate timestamped version
         run: |
           TIMESTAMP=$(date +'%Y%m%d%H%M%S')
-          # Use dot to make a valid semver pre-release
+          # update package.json version to 0.0.0-TIMESTAMP
           npm version prerelease --preid=$TIMESTAMP --no-git-tag-version
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
-      # Run semantic-release
+      # 5️⃣ Run semantic-release
       - name: Run semantic-release
         run: npx semantic-release --branches main --tag-format "v${version}" --ci false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # provided by GitHub
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}        # your npm token
