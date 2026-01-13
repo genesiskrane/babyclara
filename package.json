@@ -1,59 +1,75 @@
 {
-    "name": "babyclara",
-    "version": "0.0.0-development",
-    "description": "A frontend development workstation",
-    "main": "index.js",
-    "author": "Augment Chinedu",
-    "license": "ISC",
-    "private": false,
-    "bin": {
-      "babyclara": "index.js"
-    },
-    "files": [
-      "*"
+  "name": "babyclara",
+  "version": "0.0.0-development",
+  "description": "A frontend development workstation",
+  "main": "index.js",
+  "author": "Augment Chinedu",
+  "license": "ISC",
+  "private": false,
+  "bin": {
+    "babyclara": "index.js"
+  },
+  "files": [
+    "*"
+  ],
+  "dependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.19.0"
+  },
+  "scripts": {
+    "start": "node core/index.js",
+    "release": "semantic-release"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
+    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "semantic-release": "^24.2.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/augmentchinedu/babyclara.git"
+  },
+  "release": {
+    "branches": [
+      "main"
     ],
-    "dependencies": {
-      "express": "^5.2.1",
-      "ws": "^8.19.0"
-    },
-    "scripts": {
-      "start": "node core/index.js",
-      "release": "semantic-release"
-    },
-    "devDependencies": {
-      "@semantic-release/changelog": "^6.0.3",
-      "@semantic-release/commit-analyzer": "^13.0.1",
-      "@semantic-release/git": "^10.0.1",
-      "@semantic-release/github": "^11.0.6",
-      "@semantic-release/npm": "^12.0.2",
-      "@semantic-release/release-notes-generator": "^14.1.0",
-      "semantic-release": "^24.2.9"
-    },
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/augmentchinedu/babyclara.git"
-    },
-    "release": {
-      "branches": ["main"],
-      "plugins": [
+    "plugins": [
+      [
         "@semantic-release/commit-analyzer",
-        "@semantic-release/release-notes-generator",
-        "@semantic-release/changelog",
-        [
-          "@semantic-release/npm",
-          {
-            "npmPublish": true
-          }
-        ],
-        "@semantic-release/github",
-        [
-          "@semantic-release/git",
-          {
-            "assets": ["package.json", "package-lock.json", "CHANGELOG.md"],
-            "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-          }
-        ]
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "release": "patch"
+            }
+          ],
+          "defaultReleaseType": "patch"
+        }
+      ],
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": true
+        }
+      ],
+      "@semantic-release/github",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json",
+            "package-lock.json",
+            "CHANGELOG.md"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
       ]
-    }
+    ]
   }
-  
+}
