@@ -12,26 +12,31 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: npm
 
-      - run: npm install
+      - name: Install dependencies
+        run: npm install
 
-      # Step: generate timestamped prerelease version
+      # Generate timestamped pre-release version
       - name: Generate timestamped version
         run: |
           TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+          # Use dot to make a valid semver pre-release
           npm version prerelease --preid=$TIMESTAMP --no-git-tag-version
           echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
-      # Run semantic-release with proper tagFormat
+      # Run semantic-release
       - name: Run semantic-release
         run: npx semantic-release --branches main --tag-format "v${version}" --ci false
         env:
