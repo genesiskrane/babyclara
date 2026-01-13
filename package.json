@@ -1,6 +1,6 @@
 {
     "name": "babyclara",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "description": "A frontend development workstation",
     "main": "index.js",
     "author": "Augment Chinedu",
@@ -13,7 +13,8 @@
         "*"
     ],
     "dependencies": {
-        "express": "^5.2.1"
+        "express": "^5.2.1",
+        "ws": "^8.19.0"
     },
     "scripts": {
         "start": "node --watch core/index.js"

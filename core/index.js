@@ -38,18 +38,18 @@ async function boot() {
   global.__BABYCLARA__.ws = ws;
 
   // 3️⃣ Wait for authentication (from GUI)
-  // ws.once("authenticated", async () => {
-  //   console.log("🔐 User authenticated");
+  ws.once("authenticated", async () => {
+    console.log("🔐 User authenticated");
 
-  //   global.__BABYCLARA__.auth = true;
+    global.__BABYCLARA__.auth = true;
 
-  //   // 4️⃣ Load projects AFTER auth
-  //   if (projects.length > 0) {
-  //     await loadProjects(projects);
-  //   }
+    // 4️⃣ Load projects AFTER auth
+    if (projects.length > 0) {
+      await loadProjects(projects);
+    }
 
-  //   console.log("✅ BabyClara ready");
-  // });
+    console.log("✅ BabyClara ready");
+  });
 }
 
 boot();
