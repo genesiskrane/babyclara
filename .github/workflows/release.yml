@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Important for Semantic Release to see all tags
+          fetch-depth: 0  # needed for semantic-release to see all tags
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -25,6 +25,6 @@ jobs:
 
       - name: Run Semantic Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # automatically provided by GitHub
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}       # if publishing to npm
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # automatically provided by GitHub
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}        # if publishing to npm
         run: npx semantic-release
