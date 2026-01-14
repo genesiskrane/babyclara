@@ -1,6 +1,7 @@
 const routes = [
-  { path: "/", component: () => import("../pages/Home.vue") },
-  { path: "/auth", component: () => import("../pages/auth/SignUp.vue") },
+  { path: "/", redirect: "/home" },
+  { path: "/home", component: () => import("../pages/Home.vue") },
+  { path: "/auth/signup", component: () => import("../pages/auth/SignUp.vue") },
   { path: "/auth/signin", component: () => import("../pages/auth/SignIn.vue") },
 ];
 

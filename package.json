@@ -17,20 +17,21 @@
   ],
   "scripts": {
     "start": "node core/index.js",
-    "dev": "node core/index.js --watch",
+    "dev": "node --watch core/index.js ",
     "release": "semantic-release"
   },
   "dependencies": {
     "express": "^5.2.1",
+    "open": "^11.0.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {
-    "semantic-release": "^24.2.9",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/release-notes-generator": "^14.1.0",
+    "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.6",
-    "@semantic-release/git": "^10.0.1"
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "semantic-release": "^24.2.9"
   },
   "repository": {
     "type": "git",

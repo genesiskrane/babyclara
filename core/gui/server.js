@@ -8,10 +8,16 @@ async function startGUI() {
   const publicDir = path.join(__dirname, "dist");
 
   // 1️⃣ Serve static files first
-  app.use(express.static(publicDir, {
-    maxAge: "1d",
-    index: false
-  }));
+  app.use(
+    express.static(publicDir, {
+      maxAge: "1d",
+      index: false,
+    })
+  );
+
+  app.get("/", (req, res) => {
+    res.sendFile(path.join(publicDir, "index.html"));
+  });
 
   // 2️⃣ Catch-all route for Vue SPA (history mode)
   // Express 5 prefers a named param for wildcards
