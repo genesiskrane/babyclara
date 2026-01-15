@@ -1,6 +1,6 @@
 {
   "name": "babyclara",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A frontend development workstation",
   "main": "index.js",
   "bin": {

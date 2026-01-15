@@ -35,7 +35,7 @@ async function launchGUIWithParams() {
   await startGUI();
 
   // Construct URL with query params
-  const url = `http://localhost:5555/`;
+  const url = `http://localhost:5178/`;
 
   // Open default browser
   open(url);

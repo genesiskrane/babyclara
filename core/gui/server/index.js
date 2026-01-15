@@ -5,9 +5,12 @@ const router = require("../router");
 
 async function startGUI() {
   const app = express();
-  const PORT = process.env.BABYCLARA_GUI_PORT || 5555;
+  const PORT = process.env.BABYCLARA_GUI_PORT || 5178;
 
   const publicDir = path.join(__dirname, "..", "client");
+
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   // 1️⃣ Serve static files first
   app.use(
