@@ -6,7 +6,7 @@ const getWorkstation = (req, res) => res.json(fn.getWorkstation());
 const signup = async (req, res) => {
   try {
     const { data } = await axios.post(
-      "https://babyclara.onrender.com/api/auth/signup",
+      "https://great-unknown.onrender.com/api/auth/signup",
       req.body
     );
     res.json(data);
@@ -19,7 +19,7 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   try {
     const { data } = await axios.post(
-      "https://babyclara.onrender.com/api/auth/signin",
+      "https://great-unknown.onrender.com/api/auth/signin",
       req.body
     );
 

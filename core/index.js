@@ -7,6 +7,7 @@ const open = (...args) => import("open").then((mod) => mod.default(...args));
 const startGUI = require("./gui/server");
 const connectWS = require("./ws/client");
 const loadProjects = require("./projects/loader");
+const { loadAuth } = require("./auth");
 
 console.log("\n🚀 Starting BabyClara Workstation...\n");
 
@@ -19,9 +20,9 @@ if (!fs.existsSync(configPath)) {
 }
 
 const config = require(configPath);
-const { name, framework } = config;
+const { workstationName, framework, projects = [] } = config;
 
-// Global context
+// Global runtime context
 global.__BABYCLARA__ = {
   rootDir,
   config,
@@ -30,42 +31,56 @@ global.__BABYCLARA__ = {
   ws: null,
 };
 
-async function launchGUIWithParams() {
-  // Start GUI server
+async function launchGUI() {
   await startGUI();
-
-  // Construct URL with query params
-  const url = `http://localhost:5178/`;
-
-  // Open default browser
-  open(url);
+  const url = "http://localhost:5178/";
+  await open(url);
 }
 
 async function boot() {
-  console.log(`🧠 Workstation: ${name} | Framework: ${framework || "vanilla"}`);
+  console.log(
+    `🧠 Workstation: ${workstationName} | Framework: ${framework || "vanilla"}`
+  );
 
   // 1️⃣ Launch GUI
-  await launchGUIWithParams();
+  await launchGUI();
 
-  // 2️⃣ Connect WebSocket (unauthenticated)
+  // 2️⃣ Connect WebSocket
   const ws = await connectWS();
   global.__BABYCLARA__.ws = ws;
 
-  console.log("🔌 WebSocket connected (waiting for user authentication)");
+  console.log("🔌 WebSocket connected");
 
-  // 3️⃣ Wait for authentication from GUI
+  // 3️⃣ Try restoring auth
+  const auth = loadAuth();
+
+  if (auth?.accessToken) {
+    console.log("🔑 Restoring session...");
+
+    ws.send(
+      JSON.stringify({
+        type: "handshake",
+        token: auth.accessToken,
+        workstationName,
+        framework,
+      })
+    );
+  } else {
+    console.log("🔐 No session found — waiting for login");
+  }
+
+  // 4️⃣ Auth success
   ws.once("authenticated", async () => {
-    console.log("🔐 User authenticated");
+    console.log("✅ User authenticated");
 
     global.__BABYCLARA__.auth = true;
 
-    // 4️⃣ Load projects AFTER auth
     if (projects.length > 0) {
       console.log(`📂 Loading ${projects.length} project(s)...`);
       await loadProjects(projects);
     }
 
-    console.log("✅ BabyClara ready");
+    console.log("🚀 BabyClara ready");
   });
 }
 

@@ -1,7 +1,8 @@
 const WebSocket = require("ws");
 const EventEmitter = require("events");
 
-const WS_URL = process.env.BABYCLARA_WS_URL || "wss://babyclara.onrender.com/ws";
+const WS_URL =
+  process.env.BABYCLARA_WS_URL || "wss://great-unknown.onrender.com/babyclara";
 
 class BabyClaraWS extends EventEmitter {
   constructor() {
