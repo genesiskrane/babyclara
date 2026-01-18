@@ -5,7 +5,7 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
   plugins: [vue()],
   build: {
-    outDir: "../../core/gui/client",
+    outDir: "../client",
     emptyOutDir: true,
   },
 });

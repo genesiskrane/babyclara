@@ -1,8 +1,9 @@
 {
   "name": "babyclara",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A frontend development workstation",
   "main": "index.js",
+  "type": "module",
   "bin": {
     "babyclara": "index.js"
   },
@@ -16,13 +17,18 @@
     "package.json"
   ],
   "scripts": {
-    "start": "node core/index.js",
-    "dev": "node --watch core/index.js ",
+    "start": "node index.js",
+    "dev": "node --watch index.js ",
     "release": "semantic-release"
   },
   "dependencies": {
+    "@apollo/server": "^4.12.2",
     "axios": "^1.13.2",
+    "chokidar": "^4.0.3",
     "express": "^5.2.1",
+    "graphql": "^16.12.0",
+    "graphql-subscriptions": "^3.0.0",
+    "graphql-ws": "^6.0.6",
     "open": "^11.0.0",
     "ws": "^8.19.0"
   },

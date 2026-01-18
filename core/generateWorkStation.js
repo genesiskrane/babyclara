@@ -1,7 +1,11 @@
-const fs = require("fs");
-const path = require("path");
-const readline = require("readline");
-const { spawn } = require("child_process");
+import fs from "fs";
+import path from "path";
+import readline from "readline";
+import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const targetDir = process.cwd();
 
@@ -34,7 +38,7 @@ function installDeps(projectPath) {
   });
 }
 
-async function generate() {
+export async function generateWorkStation() {
   console.log("\nWelcome to BabyClara ✨\n");
 
   // Step 0 — CLI init
@@ -44,14 +48,14 @@ async function generate() {
 
   console.log("\nChoose framework:");
   console.log("1) Vanilla (none)");
-  console.log("2) React");
-  console.log("3) Vue");
+  console.log("2) Vue");
+  console.log("3) React");
 
   const frameworkInput = await ask("Select (1-3) [1]: ");
 
   let framework = null;
-  if (frameworkInput === "2") framework = "react";
-  if (frameworkInput === "3") framework = "vue";
+  if (frameworkInput === "2") framework = "vue";
+  if (frameworkInput === "3") framework = "react";
 
   // package.json
   const pkgPath = path.join(targetDir, "package.json");
@@ -59,11 +63,12 @@ async function generate() {
   const pkg = {
     name,
     private: true,
+    type: "module",
     scripts: {
       start: "node ./node_modules/babyclara/core/index.js",
     },
     dependencies: {
-      babyclara: "latest", // always install itself locally
+      babyclara: "latest",
     },
   };
 
@@ -72,10 +77,11 @@ async function generate() {
 
   // babyclara.config.js
   const configPath = path.join(targetDir, "babyclara.config.js");
+
   if (!fs.existsSync(configPath)) {
     fs.writeFileSync(
       configPath,
-      `module.exports = {
+      `export default {
   name: "${name}",
   framework: ${framework ? `"${framework}"` : null},
 };
@@ -91,5 +97,3 @@ async function generate() {
   console.log("\n✅ BabyClara workstation ready.");
   console.log("➡ Run: npm start\n");
 }
-
-module.exports = generate;

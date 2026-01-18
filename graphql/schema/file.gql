@@ -1,0 +1,16 @@
+type FileChange {
+  path: String!
+  event: String! # add | change | unlink
+  content: String
+}
+
+type Subscription {
+  fileChanged(workstationId: ID!): FileChange!
+}
+
+type File {
+  id: ID!
+  name: String!
+  path: String!
+  content: String
+}
