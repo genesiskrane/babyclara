@@ -1,6 +1,6 @@
 {
   "name": "babyclara",
-  "version": "1.0.11",
+  "version": "1.0.14",
   "description": "A frontend development workstation",
   "main": "index.js",
   "type": "module",
@@ -11,8 +11,10 @@
   "license": "ISC",
   "private": false,
   "files": [
+    "client/",
     "core/",
     "functions/",
+    "graphql/",
     "index.js",
     "package.json"
   ],
